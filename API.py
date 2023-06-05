@@ -15,7 +15,7 @@ class basicDataTypes: #once things get more complex, this class will be used by 
         self.name = name
         self.aliasList = aliasList
         self.validator = validator
-    def validateData(data):
+    def validateData(self,data):
         if self.validator(data) is not True: raise Exception()
     def aliasMatch(self,alias):
         return alias in self.aliasList
@@ -76,6 +76,7 @@ class CLData:
         self.Data = ()
         self.setData(dedupped_list)
     def export(self,filename): #looking at export function to make sure it doesn't export empty cells
+        from csv import writer
         #this uses the 'writer' function from the csv module
         nonetoString = lambda cells: [str(cell or '') for cell in cells]
         print(f'Writing to... {filename}')
