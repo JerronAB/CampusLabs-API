@@ -1,8 +1,3 @@
-#a few options here:
-   # An importCSV function/class that can "intelligently" make several instantiations of our cours/section/instructor/account classes, and relate that information together
-   # A single class that uses many instantiations of section, courses, instructors, etc. to make POST requests (as a method for each item)
-   # 
-
 #broad goals:
    # intake CSV files (and potentially other data formats)
    # use intaken data to:
@@ -10,6 +5,9 @@
      # these determinations need to be resilient, error-correcting, and relationship-aware (i.e., no duplicate sections)
      # use wordlists to determine these relationships automatically
      # allow manual access and assignment to certain values (i.e. column "fname" relates to column firstname in accounts)
+
+#import function should automatically associate basicDataTypes using wordlists
+#after associations are made, the next question is: how do we track what certain CL Core Data requirements need
 
 
 class APIData:
@@ -23,57 +21,47 @@ class APIData:
             ...
     
 
-class courses:
-    def __init__(self) -> None:
-        self.CourseIdentifier = ""
-        self.Subject = ""
-        self.Number = ""
-        self.Title = ""
-        self.Credits = ""
-        self.OrgUnitIdentifier = ""
-        self.Type = ""
-        self.Description = ""
-        self.CipCode = ""
-
-class sections:
-    def __init__(self) -> None:
-        self.SectionIdentifier = ""
-        self.TermIdentifier = ""
-        self.CourseIdentifier = ""
-        self.Subject = ""
-        self.CourseNumber = ""
-        self.Number = ""
-        self.BeginDate = ""
-        self.EndDate = ""
-        self.OrgUnitIdentifier = ""
-        self.Title = ""
-        self.Credits = ""
-        self.DeliveryMode = ""
-        self.Location = ""
-        self.Description = ""
-        self.CrossListingIdentifier = ""
-
-class instructors:
-    def __init__(self) -> None:
-        self.PersonIdentifier = ""
-        self.SectionIdentifier = ""
-        self.Firstname = ""
-        self.Lastname = ""
-        self.Email = ""
-        self.Role = ""
-
-class accounts:
-    def __init__(self) -> None:
-        self.ExternalId = ""
-        self.FirstName = ""
-        self.LastName = ""
-        self.Email = ""
+class basicDataTypes: #once things get more complex, this class will be used by CLData to represent columns
+    def __init__(self,name='dataType',aliasList=[],validator=None,dataMod=None) -> None:
+        self.name = name
+        self.aliasList = aliasList
+        self.validator = validator
+    def validateData(data):
+        if self.validator(data) is not True: raise Exception()
+    def aliasMatch():
+        pass
+    def modData():
+        pass
 
 #not sure this is how we want to do this ultimately. 
-class tableData:
+class CLData:
     def __init__(self) -> None:
         self.Data = tuple()
         self.Columns = []
+        self.dataAliases = {
+            'term':basicDataTypes('term',['term', 'period', 'time-period', 'time period'],lambda x: x.isnumeric() and len(x) == 4),
+            'subject': basicDataTypes('subject',['subject', 'subj'], lambda x: len(x) < 4),
+            'class-title': basicDataTypes('class-title',['class-desc', 'class desc', 'class description', 'title','description']),
+            'catalog': basicDataTypes('catalog',['catalog', 'catalogue', 'course num', 'course nbr']),
+            'section': basicDataTypes('section',['section', 'section name', 'sectionid']),
+            'instructor': basicDataTypes('instructor',['instructor', 'instructor name']),
+            'instructor-email': basicDataTypes('instructor-email',['email', 'email address', 'instructor email','email id']),
+            'start date': basicDataTypes('start date',['first day', 'start date', 'commencement date', 'startdate']),
+            'end date': basicDataTypes('end date',['last day', 'end date', 'enddate', 'finish date', 'completion date']),
+            'credits': basicDataTypes('credits',['credit hours', 'course units', 'units']),
+            'delivery-mode':basicDataTypes('delivery-mode',['delivery mode','mode','delivery'])
+        }
+        for column in self.Data:
+            for Alias in self.dataAliases:
+                if column == Alias: basicDataTypes()
+    def construct():
+        pass
+    def concat(new_column_name,*columns):
+        pass
+    def remove(data_type, illegal_strings):
+        pass
+    def repair():
+        pass
     def setData(self, data):
         print(f'setData running on iterable with {len(data)} items.')
         self.Data = tuple([item for item in data]) 
@@ -108,6 +96,10 @@ class tableData:
             for row in self.Data:
                 my_writer.writerow(nonetoString(row))
 
+class courses(CLData):
+    def __init__(self) -> None:
+        CLData.__init__(self)
+
 from csv import reader,writer #maybe this can just become a couple methods on the tableData class??
 class CSVTableSubclass(tableData): #creates and interacts with tableData object
     def __init__(self, filename=None) -> None:
@@ -122,3 +114,8 @@ class CSVTableSubclass(tableData): #creates and interacts with tableData object
                 self.Columns = list(map(lambda input_str: input_str.replace("ï»¿",""), csvData.pop(0)))
                 self.setData(csvData)
 
+organizational_units = ['OrgUnitIdentifier', 'Name', 'Acronym', 'ParentIdentifier', 'Type']
+academic_term = ['TermIdentifier', 'Name', 'BeginDate', 'EndDate', 'ParentIdentifier', 'Type']
+courses = ['CourseIdentifier', 'Subject', 'Number', 'Title', 'Credits', 'OrgUnitIdentifier', 'Type', 'Description', 'CIPCode']
+sections = ['SectionIdentifier', 'TermIdentifier', 'CourseIdentifier', 'Subject', 'CourseNumber', 'Number', 'BeginDate', 'EndDate', 'OrgUnitIdentifier', 'Title', 'Credits', 'DeliveryMode', 'Location', 'Description', 'CrossListingIdentifier']
+instructors = ['PersonIdentifier', 'SectionIdentifier', 'FirstName', 'LastName', 'Email', 'Role']
