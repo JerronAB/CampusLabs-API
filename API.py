@@ -10,17 +10,6 @@
 #after associations are made, the next question is: how do we track what certain CL Core Data requirements need
 
 
-class APIData:
-    def __init__(self) -> None:
-        self.Columns = [] #this will not be "columns" in the future
-    def matchColumn(self, string):
-        if self.knownColumns is not None:
-            ...
-        else:
-            #here, test if the string is like any of the 'columns'
-            ...
-    
-
 class basicDataTypes: #once things get more complex, this class will be used by CLData to represent columns
     def __init__(self,name='dataType',aliasList=[],validator=None,dataMod=None) -> None:
         self.name = name
@@ -28,10 +17,10 @@ class basicDataTypes: #once things get more complex, this class will be used by 
         self.validator = validator
     def validateData(data):
         if self.validator(data) is not True: raise Exception()
-    def aliasMatch():
-        pass
-    def modData():
-        pass
+    def aliasMatch(self,alias):
+        return alias in self.aliasList
+    def modData(self):
+        pass #here there will be a map function most likely
 
 #not sure this is how we want to do this ultimately. 
 class CLData:
@@ -95,24 +84,12 @@ class CLData:
             my_writer.writerow(nonetoString(self.Columns))
             for row in self.Data:
                 my_writer.writerow(nonetoString(row))
+    def CSVimport(self):
+        pass
 
-class courses(CLData):
+class courses(CLData): #here I need to flesh out a minor example of a subclass that will represent our core data in the future
     def __init__(self) -> None:
         CLData.__init__(self)
-
-from csv import reader,writer #maybe this can just become a couple methods on the tableData class??
-class CSVTableSubclass(tableData): #creates and interacts with tableData object
-    def __init__(self, filename=None) -> None:
-        tableData.__init__(self)
-        if filename is not None: self.fileIntake(filename)
-    def fileIntake(self, filename):
-        with open(filename, 'r', encoding='ISO-8859-1') as csvfile: #UTF-8
-                self.filename = filename
-                newname = filename.split('\\')
-                self.name = newname[-1].replace('.csv','')
-                csvData = [row for row in reader(csvfile)]
-                self.Columns = list(map(lambda input_str: input_str.replace("ï»¿",""), csvData.pop(0)))
-                self.setData(csvData)
 
 organizational_units = ['OrgUnitIdentifier', 'Name', 'Acronym', 'ParentIdentifier', 'Type']
 academic_term = ['TermIdentifier', 'Name', 'BeginDate', 'EndDate', 'ParentIdentifier', 'Type']
