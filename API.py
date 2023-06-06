@@ -9,6 +9,7 @@
 #CSVimport function should automatically associate basicDataTypes using wordlists
 #after associations are made, the next question is: how do we track what certain CL Core Data requirements need
 
+#next steps are working on construct and concat
 
 class basicDataTypes: #once things get more complex, this class will be used by CLData to represent columns
     def __init__(self,name='dataType',aliasList=[],validator=None,dataMod=None) -> None:
@@ -19,7 +20,7 @@ class basicDataTypes: #once things get more complex, this class will be used by 
     def validateData(self,data):
         if self.validator(data) is not True: raise Exception()
     def aliasMatch(self,alias):
-        return alias in self.aliasList
+        return alias.lower() in self.aliasList
     def modData(self,data):
         lambda data: data.strip() #just throwing this in anyway
         data = self.dataMod(data)
@@ -29,7 +30,7 @@ class CLData:
     def __init__(self) -> None:
         self.DataHorizontal = tuple()
         self.ColumnsHorizontal = []
-        self.DictionaryVertical = {}
+        self.DataVertical = {}
         self.dataAliases = {
             'term':basicDataTypes('term',['term', 'period', 'time-period', 'time period'],lambda x: x.isnumeric() and len(x) == 4),
             'subject': basicDataTypes('subject',['subject', 'subj'], lambda x: len(x) < 4),
@@ -38,8 +39,8 @@ class CLData:
             'section': basicDataTypes('section',['section', 'section name', 'sectionid']),
             'instructor': basicDataTypes('instructor',['instructor', 'instructor name']),
             'instructor-email': basicDataTypes('instructor-email',['email', 'email address', 'instructor email','email id']),
-            'start date': basicDataTypes('start date',['first day', 'start date', 'commencement date', 'startdate']),
-            'end date': basicDataTypes('end date',['last day', 'end date', 'enddate', 'finish date', 'completion date']),
+            'start-date': basicDataTypes('start-date',['first day', 'start date', 'commencement date', 'startdate']),
+            'end-date': basicDataTypes('end-date',['last day', 'end date', 'enddate', 'finish date', 'completion date']),
             'credits': basicDataTypes('credits',['credit hours', 'course units', 'units']),
             'delivery-mode':basicDataTypes('delivery-mode',['delivery mode','mode','delivery'])
         }
@@ -48,39 +49,49 @@ class CLData:
         if not all([column.lower() in self.dataAliases for column in columns]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary.')
         self.constructed = [dataType for column in columns for key,dataType in self.dataAliases if dataType.aliasMatch(column)] #so this basically builds a list of our basicDataType objects, in order based on user input
         #next we move the data to match this constructed list
-    def concat(self,new_column_name,*columns): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID",["term","course","section"])
-        self.syncData('auto')
+    def concat(self,new_column_name,*columns): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
+        self.syncData('vertical')  #needs data synced vertically
         self.dataAliases[new_column_name] = basicDataTypes(name=new_column_name)
-        self.DictionaryVertical[new_column_name] = [cell for col_name in columns for cell in self.DictionaryVertical[col_name]]
-        self.syncData('auto')
-    def remove(self,data_type, illegal_strings):
-        pass
-    def repair():
-        pass
+        self.DataVertical[new_column_name] = [] #[cell for col_name in columns for cell in self.DataVertical[col_name]]
+        indices = [self.ColumnsHorizontal.index(column) for column in columns]
+        self.DataVertical[new_column_name].append(row[index] for index in indices for row in self.DataHorizontal) #no clue if this'll work or not; will definitely need to troubleshoot
+        self.syncData('horizontal') #resync the data horizontally
+    def associate(self): #this should essentially rename columns if they match an alias above; GOT TO SHAPE THIS UP, it's just ugly
+        for index,columnName in enumerate(self.ColumnsHorizontal):
+            for key,datatype in self.dataAliases.items():
+                if datatype.aliasMatch(columnName): self.ColumnsHorizontal[index] = datatype.name
+        print(self.ColumnsHorizontal)
     def setDataHorizontal(self, data):
         print(f'setData running on iterable with {len(data)} items.')
-        self.Data = tuple([item for item in data])
+        self.DataHorizontal = tuple([item for item in data])
+        self.lastSync = 'horizontal'
         self.integrityCheck()
     def addRow(self, line):
         self.Data += (line,)
     def addRows(self,rows):
         for row in rows: self.addRow(row)
         self.integrityCheck()
+    def syncToVert(self):
+        self.DataVertical = {columnName: [row[index] for row in self.DataHorizontal] for index,columnName in enumerate(self.ColumnsHorizontal)}
+        self.lastSync = 'vertical'
+    def syncToHor(self): #incomplete, but shouldn't necessarily be needed soon. 
+        print(f'{self.lastSync}\nPERFORMING syncToHor()')
+        self.ColumnsHorizontal = [columnName for columnName in self.DataVertical.keys()]
+        #self.DataHorizontal = [[data[index] for index,(columnName,data) in enumerate(self.DataVertical.items())]] #generating a list of lists
+        #data = [data for columnName, data in self.DataVertical.items()]
+        #self.DataHorizontal = [data[index] for index in range(len(data))]
+        self.integrityCheck()
+        self.lastSync = 'horizontal'
     def syncData(self, syncTo):
-        if syncTo == 'vertical': ...
-        if syncTo == 'horizontal': ...
-        if syncTo == 'auto': #automatically determines what to sync based on last synced item
-            if self.lastSync == 'vertical': ...
-            if self.lastSync == 'horizontal': ...
+        if syncTo == 'vertical': self.syncToVert()
+        elif syncTo == 'horizontal': self.syncToHor()
+        elif syncTo == 'auto' and self.lastSync == 'vertical': self.syncToHor() #automatically determines what to sync based on last synced item
+        elif syncTo == 'auto' and self.lastSync == 'horizontal': self.syncToVert()
     def mapRows(self, mappedFunction, inPlace=False): #here, I need to explore using lambda & map, vs. using eval(), vs. using exec()
         print(f'Function being passed: {mappedFunction}')
         print(f'Modifying in-place: {inPlace}')
-        if inPlace is True: self.Data = [mappedFunction(row) for row in self.Data if row is not None]
+        if inPlace is True: self.Data = [mappedFunction(row) for row in self.DataHorizontal if row is not None]
         else: return [mappedFunction(row) for row in self.Data if row is not None]
-    def integrityCheck(self): #this will have to check both vertical and horizontal types now
-        print(f'Running integrity check---')
-        if not all(isinstance(line, list) and len(line) == len(self.Columns) for line in self.Data): raise TypeError("tableData data must be a tuple of lists with the same length as tableColumns")
-        print('Passed.')
     def deDup(self, dedupColumn): #make this nicer and cleaner
         index = self.ColumnsHorizontal.index(dedupColumn)
         dedupping_set = set()
@@ -106,6 +117,14 @@ class CLData:
                 csvData = [row for row in reader(csvfile)]
                 self.ColumnsHorizontal = list(map(lambda input_str: input_str.replace("ï»¿",""), csvData.pop(0)))
                 self.setDataHorizontal(csvData)
+    def integrityCheck(self): #this will have to check both vertical and horizontal types now
+        print(f'Running integrity check---')
+        if not all(isinstance(line, list) and len(line) == len(self.ColumnsHorizontal) for line in self.DataHorizontal): raise TypeError("tableData data must be a tuple of lists with the same length as tableColumns")
+        print('Passed.')
+    def remove(self,data_type, illegal_strings):
+        pass
+    def repair():
+        pass
 
 class courses(CLData): #here I need to flesh out a minor example of a subclass that will represent our core data in the future
     def __init__(self) -> None:
