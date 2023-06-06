@@ -25,8 +25,9 @@ class basicDataTypes: #once things get more complex, this class will be used by 
 #not sure this is how we want to do this ultimately. 
 class CLData:
     def __init__(self) -> None:
-        self.Data = tuple()
-        self.Columns = []
+        self.DataHorizontal = tuple()
+        self.ColumnsHorizontal = []
+        self.DictionaryVertical = {}
         self.dataAliases = {
             'term':basicDataTypes('term',['term', 'period', 'time-period', 'time period'],lambda x: x.isnumeric() and len(x) == 4),
             'subject': basicDataTypes('subject',['subject', 'subj'], lambda x: len(x) < 4),
@@ -40,14 +41,14 @@ class CLData:
             'credits': basicDataTypes('credits',['credit hours', 'course units', 'units']),
             'delivery-mode':basicDataTypes('delivery-mode',['delivery mode','mode','delivery'])
         }
-        for column in self.Data:
-            for Alias in self.dataAliases:
-                if column == Alias: basicDataTypes()
-    def construct():
+    def construct(self,*columns):
+        self.constructed = []
+        if not all([column.lower() in self.dataAliases for column in columns]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary.')
+        self.constructed = [dataType for column in columns for key,dataType in self.dataAliases if dataType.aliasMatch(column)] #so this basically builds a list of our basicDataType objects, in order based on user input
+        #next we move the data to match this constructed list
+    def concat(self,new_column_name,*columns):
         pass
-    def concat(new_column_name,*columns):
-        pass
-    def remove(data_type, illegal_strings):
+    def remove(self,data_type, illegal_strings):
         pass
     def repair():
         pass
@@ -60,6 +61,9 @@ class CLData:
     def addRows(self,rows):
         for row in rows: self.addRow(row)
         self.integrityCheck()
+    def syncData(self, syncTo):
+        if syncTo == 'vertical': ...
+        if syncTo == 'horizontal': pass
     def mapRows(self, mappedFunction, inPlace=False): #here, I need to explore using lambda & map, vs. using eval(), vs. using exec()
         print(f'Function being passed: {mappedFunction}')
         print(f'Modifying in-place: {inPlace}')
