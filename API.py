@@ -24,7 +24,6 @@ class basicDataTypes: #once things get more complex, this class will be used by 
     def modData(self,data):
         lambda data: data.strip() #just throwing this in anyway
         data = self.dataMod(data)
-        pass #map function?
 
 class CLData: 
     def __init__(self) -> None:
@@ -52,13 +51,11 @@ class CLData:
     def concat(self,new_column_name: str,*columns: str): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
         self.syncData('vertical')  #needs data synced vertically
         self.dataAliases[new_column_name] = basicDataTypes(name=new_column_name)
-        self.DataVertical[new_column_name] = [] #[cell for col_name in columns for cell in self.DataVertical[col_name]]
+        self.DataVertical[new_column_name] = []
         indices = [self.ColumnsHorizontal.index(column) for column in columns]
-        #lambda indexList: ouput += row[index] for index in indexList
-        '''output = ''
-        appendIndices = (row[index] for row in self.DataHorizontal for index in indexList)
-        output +='''
-        self.DataVertical[new_column_name].append([row[index] for index in indices for row in self.DataHorizontal]) #no clue if this'll work or not; will definitely need to troubleshoot
+        for row in self.DataHorizontal:
+            output = ''.join([row[index].strip() for index in indices])
+            self.DataVertical[new_column_name].append(output)
         self.syncData('horizontal') #resync the data horizontally
     def associate(self): #this should essentially rename columns if they match an alias above; GOT TO SHAPE THIS UP, it's just ugly
         for index,columnName in enumerate(self.ColumnsHorizontal):
@@ -75,6 +72,11 @@ class CLData:
     def addRows(self,rows: list):
         for row in rows: self.addRow(row)
         self.integrityCheck()
+    def syncData(self, syncTo: str):
+        if syncTo == 'vertical': self.syncToVert()
+        elif syncTo == 'horizontal': self.syncToHor()
+        elif syncTo == 'auto' and self.lastSync == 'vertical': self.syncToHor() #automatically determines what to sync based on last synced item
+        elif syncTo == 'auto' and self.lastSync == 'horizontal': self.syncToVert()
     def syncToVert(self):
         self.DataVertical = {columnName: [row[index] for row in self.DataHorizontal] for index,columnName in enumerate(self.ColumnsHorizontal)}
         self.lastSync = 'vertical'
@@ -86,11 +88,6 @@ class CLData:
         #self.DataHorizontal = [data[index] for index in range(len(data))]
         self.integrityCheck()
         self.lastSync = 'horizontal'
-    def syncData(self, syncTo: str):
-        if syncTo == 'vertical': self.syncToVert()
-        elif syncTo == 'horizontal': self.syncToHor()
-        elif syncTo == 'auto' and self.lastSync == 'vertical': self.syncToHor() #automatically determines what to sync based on last synced item
-        elif syncTo == 'auto' and self.lastSync == 'horizontal': self.syncToVert()
     def mapRows(self, mappedFunction: callable, inPlace: bool =False): #here, I need to explore using lambda & map, vs. using eval(), vs. using exec()
         print(f'Function being passed: {mappedFunction}')
         print(f'Modifying in-place: {inPlace}')

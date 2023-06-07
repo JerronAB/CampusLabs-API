@@ -7,4 +7,4 @@ PS_Export = API.CLData()
 PS_Export.CSVimport('class_table.csv')
 PS_Export.associate()
 PS_Export.concat('sectionID','term','subject','catalog','section')
-PS_Export.DataVertical
+print(PS_Export.DataVertical)
