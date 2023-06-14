@@ -43,9 +43,9 @@ class CLData:
             'credits': basicDataTypes('credits',['credit hours', 'course units', 'units']),
             'delivery-mode':basicDataTypes('delivery-mode',['delivery mode','mode','delivery'])
         }
-    def construct(self,*columns: str):
+    def constructReport(self,*columns: str):
         self.constructed = []
-        if not all([column.lower() in self.dataAliases for column in columns]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary.')
+        if not all([column.lower() in self.dataAliases for column in columns]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary, or is not a created column.')
         self.constructed = [dataType for column in columns for key,dataType in self.dataAliases if dataType.aliasMatch(column)] #so this basically builds a list of our basicDataType objects, in order based on user input
         #next we move the data to match this constructed list
     def concat(self,new_column_name: str,*columns: str): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
@@ -61,7 +61,6 @@ class CLData:
         for index,columnName in enumerate(self.ColumnsHorizontal):
             for key,datatype in self.dataAliases.items():
                 if datatype.aliasMatch(columnName): self.ColumnsHorizontal[index] = datatype.name
-        print(self.ColumnsHorizontal)
     def setDataHorizontal(self, data):
         print(f'setData running on iterable with {len(data)} items.')
         self.DataHorizontal = tuple([item for item in data])
@@ -83,9 +82,8 @@ class CLData:
     def syncToHor(self): #incomplete, but shouldn't necessarily be needed soon. 
         print(f'{self.lastSync}\nPERFORMING syncToHor()')
         self.ColumnsHorizontal = [columnName for columnName in self.DataVertical.keys()]
-        #self.DataHorizontal = [[data[index] for index,(columnName,data) in enumerate(self.DataVertical.items())]] #generating a list of lists
-        #data = [data for columnName, data in self.DataVertical.items()]
-        #self.DataHorizontal = [data[index] for index in range(len(data))]
+        for index in range(len(next(iter(self.DataVertical.items())))):
+            self.DataHorizontal += yield(data[index] for columnName,data in self.DataVertical.items())  #generating a list of lists
         self.integrityCheck()
         self.lastSync = 'horizontal'
     def mapRows(self, mappedFunction: callable, inPlace: bool =False): #here, I need to explore using lambda & map, vs. using eval(), vs. using exec()
@@ -119,8 +117,9 @@ class CLData:
                 self.ColumnsHorizontal = [(lambda inputStr: inputStr.replace("ï»¿",""))(colName) for colName in csvData.pop(0)]
                 self.setDataHorizontal(csvData)
     def integrityCheck(self): #this will have to check both vertical and horizontal types now
-        print(f'Running integrity check---')
-        if not all(isinstance(line, list) and len(line) == len(self.ColumnsHorizontal) for line in self.DataHorizontal): raise TypeError("tableData data must be a tuple of lists with the same length as tableColumns")
+        print(f'Running integrity check...')
+        if not all(isinstance(line, list) for line in self.DataHorizontal): raise TypeError("tableData data must be a tuple of lists.")
+        if not all(len(line) == len(self.ColumnsHorizontal) for line in self.DataHorizontal): raise Exception("Items in self.DataHorizontal do not have the same length as self.ColumnsHorizontal")
         print('Passed.')
     def remove(self,data_type, illegal_strings):
         pass
