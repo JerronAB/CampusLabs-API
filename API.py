@@ -44,9 +44,11 @@ class CLData:
             'delivery-mode':basicDataTypes('delivery-mode',['delivery mode','mode','delivery'])
         }
     def constructReport(self,*columns: str):
+        self.syncData('auto')
         self.constructed = []
-        if not all([column.lower() in self.dataAliases for column in columns]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary, or is not a created column.')
-        self.constructed = [dataType for column in columns for key,dataType in self.dataAliases if dataType.aliasMatch(column)] #so this basically builds a list of our basicDataType objects, in order based on user input
+        #on the next line, I need to make sure that concatenated lines are also being considered 
+        if not all([column.lower() in (name.lower() for name in self.dataAliases.keys()) for column in columns]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary, or is not a created column.')
+        self.constructed = [self.dataAliases[item] for item in columns] #builds a list of our basicDataType objects, in order based on user input
         #next we move the data to match this constructed list
     def concat(self,new_column_name: str,*columns: str): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
         self.syncData('vertical')  #needs data synced vertically
@@ -54,8 +56,9 @@ class CLData:
         self.DataVertical[new_column_name] = []
         indices = [self.ColumnsHorizontal.index(column) for column in columns]
         for row in self.DataHorizontal:
-            output = ''.join([row[index].strip() for index in indices])
+            output = ''.join([row[index].strip() for index in indices]) #gets indices of each column, concatenates lists to DataHorizontal
             self.DataVertical[new_column_name].append(output)
+        print('Complete... syncing data back to horizontal attributes. ')
         self.syncData('horizontal') #resync the data horizontally
     def associate(self): #this should essentially rename columns if they match an alias above; GOT TO SHAPE THIS UP, it's just ugly
         for index,columnName in enumerate(self.ColumnsHorizontal):
@@ -63,7 +66,7 @@ class CLData:
                 if datatype.aliasMatch(columnName): self.ColumnsHorizontal[index] = datatype.name
     def setDataHorizontal(self, data):
         print(f'setData running on iterable with {len(data)} items.')
-        self.DataHorizontal = tuple([item for item in data])
+        self.DataHorizontal = [item for item in data]
         self.lastSync = 'horizontal'
         self.integrityCheck()
     def addRow(self, line: list):
@@ -74,16 +77,20 @@ class CLData:
     def syncData(self, syncTo: str):
         if syncTo == 'vertical': self.syncToVert()
         elif syncTo == 'horizontal': self.syncToHor()
-        elif syncTo == 'auto' and self.lastSync == 'vertical': self.syncToHor() #automatically determines what to sync based on last synced item
+        elif syncTo == 'auto' and self.lastSync == 'vertical': self.syncToHor() #determines what to sync based on last synced item
         elif syncTo == 'auto' and self.lastSync == 'horizontal': self.syncToVert()
     def syncToVert(self):
         self.DataVertical = {columnName: [row[index] for row in self.DataHorizontal] for index,columnName in enumerate(self.ColumnsHorizontal)}
         self.lastSync = 'vertical'
-    def syncToHor(self): #incomplete, but shouldn't necessarily be needed soon. 
-        print(f'{self.lastSync}\nPERFORMING syncToHor()')
+    def syncToHor(self):
+        print('Performing syncToHor()')
         self.ColumnsHorizontal = [columnName for columnName in self.DataVertical.keys()]
-        for index in range(len(next(iter(self.DataVertical.items())))):
-            self.DataHorizontal += yield(data[index] for columnName,data in self.DataVertical.items())  #generating a list of lists
+        name, data = next(iter(self.DataVertical.items())) #accesses first value in dictionary
+        length = len(data)
+        print(f'Length of data: {length}')
+        self.DataHorizontal = []
+        for index in range(length):
+            self.DataHorizontal.append([data[index] for columnName,data in self.DataVertical.items()]) #generating a list of lists
         self.integrityCheck()
         self.lastSync = 'horizontal'
     def mapRows(self, mappedFunction: callable, inPlace: bool =False): #here, I need to explore using lambda & map, vs. using eval(), vs. using exec()
