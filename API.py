@@ -31,12 +31,14 @@ class CLData:
         self.ColumnsHorizontal = []
         self.DataVertical = {}
         self.dataAliases = {}
-    def constructReport(self,*columns: str, inPlace=True):
+    def constructReport(self, reportDictionary: dict):
+        #whole thing works, but it's very messy and unintuitive
         self.syncData('vertical')
-        #on the next line, I need to make sure that concatenated lines are also being considered 
-        if not all([column.lower() in (name.lower() for name in self.dataAliases.keys()) for column in columns]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary, or is not a created column.')
+        if not all([column.lower() in (name.lower() for name in self.dataAliases.keys()) for key,column in reportDictionary.items()]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary, or is not a created column.')
         #next we move the data to match this constructed list
-        self.DataVertical = {column:data for column,data in self.DataVertical.items() if column in columns}
+        grabVal = lambda value: [key for key,val in reportDictionary.items() if val == value]
+        print(f'{[grabVal(column)[0] for column,data in self.DataVertical.items() if column in list(reportDictionary.values())]} from \n{[column for column,data in self.DataVertical.items() if column in list(reportDictionary.values())]}')
+        self.DataVertical = {grabVal(column)[0]:data for column,data in self.DataVertical.items() if column in list(reportDictionary.values())}        
         self.syncData('horizontal')
         self.associate()
     def concat(self,new_column_name: str,*columns: str): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
@@ -96,16 +98,14 @@ class CLData:
         dedupped_list = [item for item in self.Data if item[index] not in dedupping_set and not dedupping_set.add(item[index])] #set() does not allow duplicate values. Here we add all items to a set on each loop, and stop loop if item is in set already
         self.Data = ()
         self.setDataHorizontal(dedupped_list)
-    def export(self,filename: str): #looking at export function to make sure it doesn't export empty cells
+    def CSVexport(self,filename: str):
         from csv import writer
-        #this uses the 'writer' function from the csv module
         nonetoString = lambda cells: [str(cell or '') for cell in cells]
         print(f'Writing to... {filename}')
         with open(filename,'w',newline='') as csv_file:
             my_writer = writer(csv_file, delimiter = ',')
             my_writer.writerow(nonetoString(self.ColumnsHorizontal))
-            for row in self.DataHorizontal:
-                my_writer.writerow(nonetoString(row))
+            [my_writer.writerow(nonetoString(row)) for row in self.DataHorizontal]
     def CSVimport(self, filename: str):
         from csv import reader
         with open(filename, 'r', encoding='ISO-8859-1') as csvfile: #UTF-8
@@ -120,17 +120,25 @@ class CLData:
         if not all(isinstance(line, list) for line in self.DataHorizontal): raise TypeError("tableData data must be a tuple of lists.")
         if not all(len(line) == len(self.ColumnsHorizontal) for line in self.DataHorizontal): raise Exception("Items in self.DataHorizontal do not have the same length as self.ColumnsHorizontal")
         print('Passed.')
-    def remove(self,data_type, illegal_strings):
-        pass
-    def repair():
-        pass
-
-class courses(CLData): #here I need to flesh out a minor example of a subclass that will represent our core data in the future
-    def __init__(self) -> None:
-        CLData.__init__(self)
-
-organizational_units = ['OrgUnitIdentifier', 'Name', 'Acronym', 'ParentIdentifier', 'Type']
-academic_term = ['TermIdentifier', 'Name', 'BeginDate', 'EndDate', 'ParentIdentifier', 'Type']
-courses_ = ['CourseIdentifier', 'Subject', 'Number', 'Title', 'Credits', 'OrgUnitIdentifier', 'Type', 'Description', 'CIPCode']
-sections = ['SectionIdentifier', 'TermIdentifier', 'CourseIdentifier', 'Subject', 'CourseNumber', 'Number', 'BeginDate', 'EndDate', 'OrgUnitIdentifier', 'Title', 'Credits', 'DeliveryMode', 'Location', 'Description', 'CrossListingIdentifier']
-instructors = ['PersonIdentifier', 'SectionIdentifier', 'FirstName', 'LastName', 'Email', 'Role']
+    def prune(self):
+        self.syncData('auto')
+        #for cell in columns, 
+        #run validator
+        # if validator failed, remove that index of item from all
+        indexes_to_prune = []
+        for keys,cols in self.DataVertical.items():
+            validatorFx = None
+            for alias,dataType in self.dataAliases.items(): 
+                if dataType.aliasMatch(keys):
+                    validatorFx = dataType.validator
+                    break
+            if validatorFx is None: break
+            for index,cell in enumerate(cols):
+                if not validatorFx(cell):
+                    indexes_to_prune.append(index)
+        for index in indexes_to_prune:
+            for keys in self.DataVertical.keys():
+                self.DataVertical[keys][index] = 'REMOVE'
+        for keys in self.DataVertical.keys():
+            self.DataVertical[keys] = [item for item in self.DataVertical[keys] if item != 'REMOVE']
+        self.syncData('horizontal')
