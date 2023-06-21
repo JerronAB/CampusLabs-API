@@ -30,26 +30,15 @@ class CLData:
         self.DataHorizontal = tuple()
         self.ColumnsHorizontal = []
         self.DataVertical = {}
-        self.dataAliases = {
-            'term':basicDataTypes('term',['term', 'period', 'time-period', 'time period'],lambda x: x.isnumeric() and len(x) == 4),
-            'subject': basicDataTypes('subject',['subject', 'subj'], lambda x: len(x) < 4),
-            'class-title': basicDataTypes('class-title',['class-desc', 'class desc', 'class description', 'title','description']),
-            'catalog': basicDataTypes('catalog',['catalog', 'catalogue', 'course num', 'course nbr']),
-            'section': basicDataTypes('section',['section', 'section name', 'sectionid']),
-            'instructor': basicDataTypes('instructor',['instructor', 'instructor name']),
-            'instructor-email': basicDataTypes('instructor-email',['email', 'email address', 'instructor email','email id']),
-            'start-date': basicDataTypes('start-date',['first day', 'start date', 'commencement date', 'startdate', 'begin date']),
-            'end-date': basicDataTypes('end-date',['last day', 'end date', 'enddate', 'finish date', 'completion date', 'end date']),
-            'credits': basicDataTypes('credits',['credit hours', 'course units', 'units']),
-            'delivery-mode':basicDataTypes('delivery-mode',['delivery mode','mode','delivery'])
-        }
-    def constructReport(self,*columns: str):
-        self.syncData('auto')
-        self.constructed = []
+        self.dataAliases = {}
+    def constructReport(self,*columns: str, inPlace=True):
+        self.syncData('vertical')
         #on the next line, I need to make sure that concatenated lines are also being considered 
         if not all([column.lower() in (name.lower() for name in self.dataAliases.keys()) for column in columns]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary, or is not a created column.')
-        self.constructed = [self.dataAliases[item] for item in columns] #builds a list of our basicDataType objects, in order based on user input
         #next we move the data to match this constructed list
+        self.DataVertical = {column:data for column,data in self.DataVertical.items() if column in columns}
+        self.syncData('horizontal')
+        self.associate()
     def concat(self,new_column_name: str,*columns: str): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
         self.syncData('vertical')  #needs data synced vertically
         self.dataAliases[new_column_name] = basicDataTypes(name=new_column_name)
@@ -84,6 +73,7 @@ class CLData:
         self.lastSync = 'vertical'
     def syncToHor(self):
         print('Performing syncToHor()')
+        self.ColumnsHorizontal.clear()
         self.ColumnsHorizontal = [columnName for columnName in self.DataVertical.keys()]
         name, data = next(iter(self.DataVertical.items())) #accesses first value in dictionary
         length = len(data)
@@ -93,6 +83,8 @@ class CLData:
             self.DataHorizontal.append([data[index] for columnName,data in self.DataVertical.items()]) #generating a list of lists
         self.integrityCheck()
         self.lastSync = 'horizontal'
+    def addDataType(self, name: str, aliases: list, validator=None, datamodifier=None):
+        self.dataAliases[name] = basicDataTypes(name,aliases,validator,datamodifier)
     def mapRows(self, mappedFunction: callable, inPlace: bool =False): #here, I need to explore using lambda & map, vs. using eval(), vs. using exec()
         print(f'Function being passed: {mappedFunction}')
         print(f'Modifying in-place: {inPlace}')
@@ -112,7 +104,7 @@ class CLData:
         with open(filename,'w',newline='') as csv_file:
             my_writer = writer(csv_file, delimiter = ',')
             my_writer.writerow(nonetoString(self.ColumnsHorizontal))
-            for row in self.Data:
+            for row in self.DataHorizontal:
                 my_writer.writerow(nonetoString(row))
     def CSVimport(self, filename: str):
         from csv import reader
