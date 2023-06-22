@@ -13,6 +13,7 @@ PS_Export.addDataType('end-date', ['last day', 'end date','enddate', 'finish dat
 PS_Export.addDataType('credits', ['credit hours', 'course units', 'units'])
 PS_Export.addDataType('delivery-mode', ['delivery mode', 'mode', 'delivery'],datamodifier=lambda x: x.replace("HB", "Hybrid").replace("BP", "Face2Face").replace("BW", "Online").replace("BL","Face2Face").replace("IB","Face2Face").replace("P","Face2Face")) #I know I could squash this into a list that I unpack, but this is fine
 PS_Export.addDataType('type',['type'],datamodifier=lambda x: 'Undergraduate')
+PS_Export.addDataType('org-unit',['orgunitidentifier','orgunit'],datamodifier=lambda x: '')
 
 PS_Export.CSVimport('2temp.class_table.csv')
 PS_Export.associate()
@@ -22,7 +23,7 @@ PS_Export.concat('CourseIdentifier', 'subject', 'catalog')
 PS_Export.prune()
 
 #PS_Export.constructReport('SectionIdentifier', 'TermIdentifier', 'CourseIdentifier', 'Subject', 'CourseNumber', 'Number', 'BeginDate', 'EndDate', 'OrgUnitIdentifier', 'Title', 'Credits', 'DeliveryMode', 'Location', 'Description', 'CrossListingIdentifier')
-PS_Export.constructReport({'SectionIdentifier':'SectionIdentifier', 'TermIdentifier':'term', 'CourseIdentifier':'CourseIdentifier', 'Subject':'subject', 'CourseNumber':'catalog', 'Number':'section', 'BeginDate':'start-date', 'EndDate':'end-date', 'Title':'class-title', 'Credits':'credits', 'DeliveryMode':'delivery-mode'})
+PS_Export.constructReport({'SectionIdentifier':'SectionIdentifier', 'TermIdentifier':'term', 'CourseIdentifier':'CourseIdentifier', 'Subject':'subject', 'CourseNumber':'catalog', 'Number':'section', 'BeginDate':'start-date', 'EndDate':'end-date', 'Title':'class-title', 'Credits':'credits', 'DeliveryMode':'delivery-mode','OrgUnitIdentifier':'org-unit','Type':'type'})
 PS_Export.CSVexport('../report_temp.csv')
 #print(PS_Export.ColumnsHorizontal)
 #print(PS_Export.DataHorizontal)

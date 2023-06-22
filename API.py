@@ -1,3 +1,8 @@
+#Current Goals:
+#   Currently, accessing/retrieving/testing basicDataTypes using a CLData class is circuitous
+#   Need to shape it up using dunder methods on the basicDataTypes class. 
+#   Finally, do general QA/logic-checking on all CLData methods. I got this out way too quickly. 
+
 class basicDataTypes: #once things get more complex, this class will be used by CLData to represent columns
     def __init__(self,name='dataType',aliasList=[],validator: callable =None,dataMod: callable =None):
         self.name = name
@@ -26,7 +31,8 @@ class CLData:
         #next we move the data to match this constructed list
         grabVal = lambda value: [key for key,val in reportDictionary.items() if val == value]
         print(f'{[grabVal(column)[0] for column,data in self.DataVertical.items() if column in list(reportDictionary.values())]} from \n{[column for column,data in self.DataVertical.items() if column in list(reportDictionary.values())]}')
-        self.DataVertical = {grabVal(column)[0]:data for column,data in self.DataVertical.items() if column in list(reportDictionary.values())}        
+        #it appears this line is screwing with the process/not working right. Exports have original names for columns 
+        self.DataVertical = {grabVal(column)[0]:data for column,data in self.DataVertical.items() if column in list(reportDictionary.values())} 
         self.syncData('horizontal')
         self.associate()
 
@@ -36,12 +42,14 @@ class CLData:
         self.DataVertical[new_column_name] = []
         indices = [self.ColumnsHorizontal.index(column) for column in columns]
         for row in self.DataHorizontal:
-            output = ''.join([row[index].strip() for index in indices]) #gets indices of each column, concatenates lists to DataHorizontal
+            output = ''.join([row[index].strip() for index in indices]) 
+            #gets indices of each column, concatenates lists to DataHorizontal
             self.DataVertical[new_column_name].append(output)
         print('Complete... syncing data back to horizontal attributes. ')
         self.syncData('horizontal') #resync the data horizontally
 
-    def associate(self): #this should essentially rename columns if they match an alias above; GOT TO SHAPE THIS UP, it's just ugly
+    def associate(self): 
+        #this should essentially rename columns if they match an alias above; GOT TO SHAPE THIS UP, it's just ugly
         for index,columnName in enumerate(self.ColumnsHorizontal):
             for key,datatype in self.dataAliases.items():
                 if datatype.aliasMatch(columnName): self.ColumnsHorizontal[index] = datatype.name
@@ -62,7 +70,8 @@ class CLData:
     def syncData(self, syncTo: str):
         if syncTo == 'vertical': self.syncToVert()
         elif syncTo == 'horizontal': self.syncToHor()
-        elif syncTo == 'auto' and self.lastSync == 'vertical': self.syncToHor() #determines what to sync based on last synced item
+        elif syncTo == 'auto' and self.lastSync == 'vertical': self.syncToHor() 
+        #determines what to sync based on last synced item
         elif syncTo == 'auto' and self.lastSync == 'horizontal': self.syncToVert()
 
     def syncToVert(self):
@@ -85,7 +94,8 @@ class CLData:
     def addDataType(self, name: str, aliases: list, validator=None, datamodifier=None):
         self.dataAliases[name] = basicDataTypes(name,aliases,validator,datamodifier)
 
-    def mapRows(self, mappedFunction: callable, inPlace: bool =False): #here, I need to explore using lambda & map, vs. using eval(), vs. using exec()
+    def mapRows(self, mappedFunction: callable, inPlace: bool =False): 
+        #here, I need to explore using lambda & map, vs. using eval(), vs. using exec()
         print(f'Function being passed: {mappedFunction}')
         print(f'Modifying in-place: {inPlace}')
         if inPlace is True: self.Data = [mappedFunction(row) for row in self.DataHorizontal if row is not None]
