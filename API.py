@@ -9,6 +9,11 @@ class basicDataTypes: #once things get more complex, this class will be used by 
         self.aliasList = aliasList
         self.validator = validator
         self.dataMod = dataMod
+    def __eq__(self,string):
+        return self.__contains__(string)
+    def __contains__(self,string):
+        if string.lower() in [item.lower() for item in self.aliasList]: return True
+        else: return False
     def validateData(self,data):
         return self.validator(data) # do we also want to raise Exception()
     def aliasMatch(self,alias):
