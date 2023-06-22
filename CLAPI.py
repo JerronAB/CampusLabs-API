@@ -168,7 +168,7 @@ class CLData:
         indexes_to_prune = []
         for keys,cols in self.DataVertical.items():
             validatorFx = None
-            for alias,dataType in self.dataAliases.items(): 
+            for alias,dataType in self.dataAliases.items():
                 if dataType.aliasMatch(keys):
                     validatorFx = dataType.validator
                     break
