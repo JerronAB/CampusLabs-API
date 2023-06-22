@@ -25,8 +25,6 @@ PS_Export.prune()
 #PS_Export.constructReport('SectionIdentifier', 'TermIdentifier', 'CourseIdentifier', 'Subject', 'CourseNumber', 'Number', 'BeginDate', 'EndDate', 'OrgUnitIdentifier', 'Title', 'Credits', 'DeliveryMode', 'Location', 'Description', 'CrossListingIdentifier')
 PS_Export.constructReport({'SectionIdentifier':'SectionIdentifier', 'TermIdentifier':'term', 'CourseIdentifier':'CourseIdentifier', 'Subject':'subject', 'CourseNumber':'catalog', 'Number':'section', 'BeginDate':'start-date', 'EndDate':'end-date', 'Title':'class-title', 'Credits':'credits', 'DeliveryMode':'delivery-mode','OrgUnitIdentifier':'org-unit','Type':'type'})
 PS_Export.CSVexport('../report_temp.csv')
-#print(PS_Export.ColumnsHorizontal)
-#print(PS_Export.DataHorizontal)
 
 #PS_Export.CSVimport('2temp.class_table.csv')
 #PS_Export.associate()

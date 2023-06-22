@@ -35,11 +35,8 @@ class CLData:
         if not all([column.lower() in (name.lower() for name in self.dataAliases.keys()) for key,column in reportDictionary.items()]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary, or is not a created column.')
         #next we move the data to match this constructed list
         grabVal = lambda value: [key for key,val in reportDictionary.items() if val == value]
-        print(f'{[grabVal(column)[0] for column,data in self.DataVertical.items() if column in list(reportDictionary.values())]} from \n{[column for column,data in self.DataVertical.items() if column in list(reportDictionary.values())]}')
-        #it appears this line is screwing with the process/not working right. Exports have original names for columns 
-        self.DataVertical = {grabVal(column)[0]:data for column,data in self.DataVertical.items() if column in list(reportDictionary.values())} 
+        self.DataVertical = {grabVal(column)[0]:data for column,data in self.DataVertical.items() if column in list(reportDictionary.values())}
         self.syncData('horizontal')
-        self.associate()
 
     def concat(self,new_column_name: str,*columns: str): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
         self.syncData('vertical')  #needs data synced vertically
