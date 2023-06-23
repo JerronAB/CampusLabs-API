@@ -23,7 +23,10 @@ class basicDataType: #once things get more complex, this class will be used by C
         if string.lower() in [item.lower() for item in self.aliasList]: return True
         if string.lower() == self.name: return True
         else: return False
-    def validateData(self,data):
+    def validateData(self,data) -> bool:
+        if self.validator is None: 
+            print(f'No validator for {self.name}, returning True---')
+            return True #data is always valid if we haven't defined validator
         return self.validator(data) # do we also want to raise Exception()
     def aliasMatch(self,alias):
         return alias.lower() in self.aliasList
@@ -34,7 +37,6 @@ class basicDataType: #once things get more complex, this class will be used by C
             data = [self.dataModder(cell) for cell in data]
             return data
         except:
-            print('ModData errored... returning original data. ')
             return data
 
 class CLData: 
@@ -60,6 +62,7 @@ class CLData:
         #whole thing almost works, but it's very messy and unintuitive
         self.syncData('vertical')
         if not all([column.lower() in (name.lower() for name in self.dataAliases.keys()) for key,column in reportDictionary.items()]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary, or is not a created column.')
+        self.prune()
         #next we move the data to match this constructed list
         grabVal = lambda value: [key for key,val in reportDictionary.items() if val == value]
         self.DataVertical = {grabVal(column)[0]:data for column,data in self.DataVertical.items() if column in list(reportDictionary.values())}
@@ -179,21 +182,14 @@ class CLData:
 
     def prune(self): #needs lots of QA later; can't forget tricks like recursion or while loops
         self.syncData('auto')
-        #for cell in columns, 
-        #run validator
-        # if validator failed, remove that index of item from all
-        indexes_to_prune = []
+        indexes_to_remove = []
         for keys,cols in self.DataVertical.items():
-            validatorFx = None
-            for alias,dataType in self.dataAliases.items():
-                if dataType.aliasMatch(keys):
-                    validatorFx = dataType.validator
-                    break
-            if validatorFx is None: break
+            if type(keys) is not basicDataType: continue
+            if keys.validator is None: continue
             for index,cell in enumerate(cols):
-                if not validatorFx(cell):
-                    indexes_to_prune.append(index)
-        for index in indexes_to_prune:
+                if not keys.validateData(cell):
+                    indexes_to_remove.append(index)
+        for index in indexes_to_remove:
             for keys in self.DataVertical.keys():
                 self.DataVertical[keys][index] = 'REMOVE'
         for keys in self.DataVertical.keys():
