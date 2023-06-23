@@ -1,17 +1,6 @@
 import CLAPI
 
 Section_Export = CLAPI.CLData()
-Section_Export.addDataType('term', ['term', 'period', 'time-period','time period'], lambda x: x.isnumeric() and len(x) == 4)
-Section_Export.addDataType('subject', ['subject', 'subj'], lambda x: len(x) < 4)
-Section_Export.addDataType('class-title', ['class-desc', 'class desc', 'class description', 'title', 'description'])
-Section_Export.addDataType('catalog', ['catalog', 'catalogue', 'course num', 'course nbr', 'number'])
-Section_Export.addDataType('section', ['section', 'section name', 'sectionid'])
-Section_Export.addDataType('instructor', ['instructor', 'instructor name'], lambda x: x.lower() != 'staff')
-Section_Export.addDataType('instructor-email', ['email', 'email address', 'instructor email', 'email id'])
-Section_Export.addDataType('start-date', ['first day', 'start date', 'commencement date', 'startdate', 'begin date'])
-Section_Export.addDataType('end-date', ['last day', 'end date','enddate', 'finish date', 'completion date', 'end date'])
-Section_Export.addDataType('credits', ['credit hours', 'course units', 'units'])
-Section_Export.addDataType('delivery-mode', ['delivery mode', 'mode', 'delivery'], datamodifier=lambda x: x.replace("HB", "Hybrid").replace("BP", "Face2Face").replace("BW", "Online").replace("BL", "Face2Face").replace("IB", "Face2Face").replace("P", "Face2Face"))  # I know I could squash this into a list that I unpack, but this is fine
 Section_Export.insertDataType('type', datamodifier=lambda x: 'Undergraduate')
 Section_Export.insertDataType('org-unit', datamodifier=lambda x: '')
 Section_Export.insertDataType('location', datamodifier=lambda x: '')
@@ -60,17 +49,6 @@ Section_Export.CSVexport('../4224_sections_report_temp.csv')
 '''
 
 Course_Export = CLAPI.CLData()
-Course_Export.addDataType('term', ['term', 'period', 'time-period','time period'], lambda x: x.isnumeric() and len(x) == 4)
-Course_Export.addDataType('subject', ['subject', 'subj'], lambda x: len(x) < 4)
-Course_Export.addDataType('class-title', ['class-desc', 'class desc', 'class description', 'title', 'description'])
-Course_Export.addDataType('catalog', ['catalog', 'catalogue', 'course num', 'course nbr', 'number'])
-Course_Export.addDataType('section', ['section', 'section name', 'sectionid'])
-Course_Export.addDataType('instructor', ['instructor', 'instructor name'], lambda x: x.lower() != 'staff')
-Course_Export.addDataType('instructor-email', ['email', 'email address', 'instructor email', 'email id'])
-Course_Export.addDataType('start-date', ['first day', 'start date', 'commencement date', 'startdate', 'begin date'])
-Course_Export.addDataType('end-date', ['last day', 'end date','enddate', 'finish date', 'completion date', 'end date'])
-Course_Export.addDataType('credits', ['credit hours', 'course units', 'units'])
-Course_Export.addDataType('delivery-mode', ['delivery mode', 'mode', 'delivery'], datamodifier=lambda x: x.replace("HB", "Hybrid").replace("BP", "Face2Face").replace("BW", "Online").replace("BL", "Face2Face").replace("IB", "Face2Face").replace("P", "Face2Face"))  # I know I could squash this into a list that I unpack, but this is fine
 Course_Export.insertDataType('type', datamodifier=lambda x: 'Undergraduate')
 Course_Export.insertDataType('org-unit', datamodifier=lambda x: '')
 Course_Export.insertDataType('desc', datamodifier=lambda x: '')
@@ -101,7 +79,7 @@ Course_Export.constructReport(construction_dictionary)
 Course_Export.deDup('CourseIdentifier')
 Course_Export.CSVexport('../4226_course_report_temp.csv')
 
-Instructors_Export = CLAPI.CLData()
+Instructors_Export = CLAPI.CLData(importDefaultDataTypes=False)
 Instructors_Export.addDataType('term', ['term', 'period', 'time-period','time period'], lambda x: x.isnumeric() and len(x) == 4)
 Instructors_Export.addDataType('subject', ['subject', 'subj'], lambda x: len(x) < 4)
 Instructors_Export.addDataType('catalog', ['catalog', 'catalogue', 'course num', 'course nbr', 'number'])
@@ -110,10 +88,19 @@ Instructors_Export.addDataType('instructor', ['instructor', 'instructor name'], 
 Instructors_Export.addDataType('instructor-email', ['email', 'email address', 'instructor email', 'email id'])
 Instructors_Export.insertDataType('role',lambda x: 'Primary')
 Instructors_Export.insertDataType('PersonIdentifier',lambda x: '')
+def splitNameFirst(name):
+    nameSplit = name.split(',')
+    first = nameSplit[-1].split(' ')
+    return first[0]
+def splitNameLast(name):
+    last = name.split(',')
+    return last[0]
+Instructors_Export.copyDataType('firstname','instructor',splitNameFirst)
+Instructors_Export.copyDataType('lastname','instructor',splitNameLast)
 construction_dictionary = {'PersonIdentifier': 'PersonIdentifier', 
                            'SectionIdentifier': 'SectionIdentifier', 
-                           'FirstName': 'instructor', 
-                           'LastName': 'instructor', 
+                           'FirstName': 'firstname', 
+                           'LastName':'lastname',
                            'Email': 'instructor-email', 
                            'Role': 'role', 
                            }
@@ -131,6 +118,7 @@ Instructors_Export.prune()
 Instructors_Export.constructReport(construction_dictionary)
 Instructors_Export.CSVexport('../4226_instrs_report_temp.csv')
 
+#this is just here for a reference
 organizational_units = ['OrgUnitIdentifier','Name', 'Acronym', 'ParentIdentifier', 'Type']
 academic_term = ['TermIdentifier', 'Name','BeginDate', 'EndDate', 'ParentIdentifier', 'Type']
 courses = ['CourseIdentifier', 'Subject', 'Number', 'Title','Credits', 'OrgUnitIdentifier', 'Type', 'Description', 'CIPCode']

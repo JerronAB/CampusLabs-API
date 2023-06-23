@@ -1,16 +1,24 @@
 #Current Goals:
-#   Currently, accessing/retrieving/testing basicDataTypes using a CLData class is circuitous
-#   Need to shape it up using dunder methods on the basicDataTypes class. 
+#   Currently, accessing/retrieving/testing basicDataType using a CLData class is circuitous
+#   Need to shape it up using dunder methods on the basicDataType class. 
 #   Finally, do general QA/logic-checking on all CLData methods. I got this out way too quickly. 
 
-class basicDataTypes: #once things get more complex, this class will be used by CLData to represent columns
-    def __init__(self,name='dataType',aliasList=[],validator: callable =None,dataMod: callable =None):
+class basicDataType: #once things get more complex, this class will be used by CLData to represent columns
+    #eventually I want this to be a subclass of a dictionary
+    def __init__(self,name,aliasList=[],validator: callable =None,dataMod: callable =None):
         self.name = name
         self.aliasList = aliasList
         self.validator = validator
         self.dataModder = dataMod
-    def __eq__(self,string):
-        return self.__contains__(string)
+    def __repr__(self) -> str:
+        return self.name
+    def __str__(self) -> str:
+        return self.name
+    def __eq__(self,string_or_object):
+        if type(string_or_object) is str: return self.__contains__(string_or_object)
+        else: return self.name == string_or_object.name
+    def __hash__(self) -> int:
+        return hash(self.name)
     def __contains__(self,string):
         if string.lower() in [item.lower() for item in self.aliasList]: return True
         if string.lower() == self.name: return True
@@ -26,14 +34,27 @@ class basicDataTypes: #once things get more complex, this class will be used by 
             data = [self.dataModder(cell) for cell in data]
             return data
         except:
+            print('ModData errored... returning original data. ')
             return data
 
 class CLData: 
-    def __init__(self) -> None:
+    def __init__(self,importDefaultDataTypes=True) -> None:
         self.DataHorizontal = tuple()
         self.ColumnsHorizontal = []
         self.DataVertical = {}
         self.dataAliases = {}
+        if importDefaultDataTypes:
+            self.addDataType('term', ['term', 'period', 'time-period','time period'], lambda x: x.isnumeric() and len(x) == 4)
+            self.addDataType('subject', ['subject', 'subj'], lambda x: len(x) < 4)
+            self.addDataType('class-title', ['class-desc', 'class desc', 'class description', 'title', 'description'])
+            self.addDataType('catalog', ['catalog', 'catalogue', 'course num', 'course nbr', 'number'])
+            self.addDataType('section', ['section', 'section name', 'sectionid'])
+            self.addDataType('instructor', ['instructor', 'instructor name'], lambda x: x.lower() != 'staff')
+            self.addDataType('instructor-email', ['email', 'email address', 'instructor email', 'email id'])
+            self.addDataType('start-date', ['first day', 'start date', 'commencement date', 'startdate', 'begin date'])
+            self.addDataType('end-date', ['last day', 'end date','enddate', 'finish date', 'completion date', 'end date'])
+            self.addDataType('credits', ['credit hours', 'course units', 'units'])
+            self.addDataType('delivery-mode', ['delivery mode', 'mode', 'delivery'], datamodifier=lambda x: x.replace("HB", "Hybrid").replace("BP", "Face2Face").replace("BW", "Online").replace("BL", "Face2Face").replace("IB", "Face2Face").replace("P", "Face2Face"))  # I know I could squash this into a list that I unpack, but this is fine
 
     def constructReport(self, reportDictionary: dict):
         #whole thing almost works, but it's very messy and unintuitive
@@ -46,7 +67,7 @@ class CLData:
 
     def concat(self,new_column_name: str,*columns: str): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
         self.syncData('vertical')  #needs data synced vertically
-        self.dataAliases[new_column_name] = basicDataTypes(name=new_column_name)
+        self.dataAliases[new_column_name] = basicDataType(name=new_column_name)
         self.DataVertical[new_column_name] = []
         indices = [self.ColumnsHorizontal.index(column) for column in columns]
         for row in self.DataHorizontal:
@@ -61,33 +82,27 @@ class CLData:
         self.syncData('auto')
         for index,columnName in enumerate(self.ColumnsHorizontal):
             for key,datatype in self.dataAliases.items():
-                if datatype.aliasMatch(columnName): self.ColumnsHorizontal[index] = datatype.name
+                if datatype.aliasMatch(columnName): self.ColumnsHorizontal[index] = datatype
         self.syncData('vertical')
         for key,data in self.DataVertical.items(): 
-            for name,datatype in self.dataAliases.items():
-                if key in datatype: #this is possible because of the __contains__ attribute on basicDataTypes
-                    self.DataVertical[key] = datatype.modData(data)
+            if type(key) is basicDataType: self.DataVertical[key] = key.modData(data)
         keys = list(self.DataVertical.keys())
         key = keys[0]
         vertLength = len(self.DataVertical[key])              
-        for basicDataType in self.dataAliases.values():
-            if basicDataType == 'INSERTION':
-                print(f'During association, an insertable datatype, {basicDataType.name} was detected.')
-                self.DataVertical[basicDataType.name] = ['' for i in range(vertLength)]
-                self.DataVertical[basicDataType.name] = basicDataType.modData(self.DataVertical[basicDataType.name])
+        for _basicDataType in self.dataAliases.values():
+            if _basicDataType == 'INSERTION':
+                print(f'During association, an insertable datatype, {_basicDataType.name} was detected.')
+                self.DataVertical[_basicDataType] = ['' for i in range(vertLength)]
+                self.DataVertical[_basicDataType] = _basicDataType.modData(self.DataVertical[_basicDataType])
+            if _basicDataType == 'COPIED':
+                print(f'A datatype to copy, {_basicDataType} was found during association. Modding {_basicDataType.aliasList[1]} data with function: {_basicDataType.dataModder}')
+                self.DataVertical[_basicDataType] = _basicDataType.modData(self.DataVertical[_basicDataType.aliasList[1]])
         self.syncData('horizontal')
 
     def setDataHorizontal(self, data):
         print(f'setData running on iterable with {len(data)} items.')
         self.DataHorizontal = [item for item in data]
         self.lastSync = 'horizontal'
-        self.integrityCheck()
-
-    def addRow(self, line: list):
-        self.Data += (line,)
-
-    def addRows(self,rows: list):
-        for row in rows: self.addRow(row)
         self.integrityCheck()
 
     def syncData(self, syncTo: str):
@@ -116,9 +131,11 @@ class CLData:
         self.lastSync = 'horizontal'
 
     def addDataType(self, name: str, aliases: list, validator=None, datamodifier=None):
-        self.dataAliases[name] = basicDataTypes(name,aliases,validator,datamodifier)
+        self.dataAliases[name] = basicDataType(name,aliases,validator,datamodifier)
     def insertDataType(self, name: str, validator=None, datamodifier=None): #inserts data if none exists
         self.addDataType(name, ['INSERTION'], validator, datamodifier)
+    def copyDataType(self, newName: str, oldName: str, datamodifier=None):
+        self.dataAliases[newName] = basicDataType(newName,['COPIED',oldName],dataMod=datamodifier)
 
     def mapRows(self, mappedFunction: callable): 
         self.Data = [mappedFunction(row) for row in self.DataHorizontal if row is not None]
@@ -160,7 +177,7 @@ class CLData:
         if not all(len(line) == len(self.ColumnsHorizontal) for line in self.DataHorizontal): raise Exception("Items in self.DataHorizontal do not have the same length as self.ColumnsHorizontal")
         print('Passed.')
 
-    def prune(self): #needs lots of QA later
+    def prune(self): #needs lots of QA later; can't forget tricks like recursion or while loops
         self.syncData('auto')
         #for cell in columns, 
         #run validator
