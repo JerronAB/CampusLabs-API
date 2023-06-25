@@ -33,10 +33,11 @@ class basicDataType: #once things get more complex, this class will be used by C
     def modData(self,list_of_data):
         stripper = lambda input: input.strip() #just throwing this in anyway
         data = [stripper(cell) for cell in list_of_data]
+        if self.dataModder is None: return data
         try:
-            data = [self.dataModder(cell) for cell in data]
-            return data
+            return [self.dataModder(cell) for cell in data]
         except:
+            print(f'Error during data modification for {self.name}')
             return data
 
 class CLData: 
@@ -65,11 +66,18 @@ class CLData:
         self.prune()
         #next we move the data to match this constructed list
         grabVal = lambda value: [key for key,val in reportDictionary.items() if val == value]
-        self.DataVertical = {grabVal(column)[0]:data for column,data in self.DataVertical.items() if column in list(reportDictionary.values())}
+        newDict = {}
+        for column, data in self.DataVertical.items():
+            if column in list(reportDictionary.values()): 
+                print(f'Column: {column} is in reportDictionary...')
+                if type(column) is basicDataType: newDict[grabVal(column.name)[0]] = data
+                else: newDict[grabVal(column)[0]] = data
+        self.DataVertical = newDict
+        #AT SOME POINT, INSTR-EMAIL JUST BECOMES Email
         self.syncData('horizontal')
 
     def concat(self,new_column_name: str,*columns: str): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
-        self.syncData('vertical')  #needs data synced vertically
+        self.syncData('vertical') #needs data synced vertically
         self.dataAliases[new_column_name] = basicDataType(name=new_column_name)
         self.DataVertical[new_column_name] = []
         indices = [self.ColumnsHorizontal.index(column) for column in columns]

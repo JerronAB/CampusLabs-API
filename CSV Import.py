@@ -75,9 +75,14 @@ Course_Export.constructReport(construction_dictionary)
 Course_Export.deDup('CourseIdentifier')
 Course_Export.CSVexport('../4226_course_report_temp.csv')
 
-Instructors_Export = CLAPI.CLData()
-Instructors_Export.insertDataType('role',datamodifier=lambda x: 'Primary')
-Instructors_Export.insertDataType('PersonIdentifier',datamodifier=lambda x: '')
+with open('temp.accounts.csv', 'r', encoding='ISO-8859-1') as csvfile: #UTF-8
+    from csv import reader
+    csvData = [row for row in reader(csvfile)]
+    columnsHorizontal = [(lambda inputStr: inputStr.replace("ï»¿",""))(colName) for colName in csvData.pop(0)]
+    externalIdIndex = columnsHorizontal.index('ExternalId')
+    emailIndex = columnsHorizontal.index('Email')
+    instrDict = {row[emailIndex]:row[externalIdIndex] for row in csvData}
+
 def splitNameFirst(name):
     nameSplit = name.split(',')
     first = nameSplit[-1].split(' ')
@@ -85,8 +90,12 @@ def splitNameFirst(name):
 def splitNameLast(name):
     last = name.split(',')
     return last[0]
-Instructors_Export.copyDataType('firstname','instructor',splitNameFirst)
-Instructors_Export.copyDataType('lastname','instructor',splitNameLast)
+
+Instructors_Export = CLAPI.CLData()
+Instructors_Export.copyDataType('PersonIdentifier','instructor-email',datamodifier=lambda email: instrDict.get(email,'UNKNOWN'))
+Instructors_Export.copyDataType('firstname','instructor',datamodifier=splitNameFirst)
+Instructors_Export.copyDataType('lastname','instructor',datamodifier=splitNameLast)
+Instructors_Export.insertDataType('role',datamodifier=lambda x: 'Primary')
 construction_dictionary = {'PersonIdentifier': 'PersonIdentifier', 
                            'SectionIdentifier': 'SectionIdentifier', 
                            'FirstName': 'firstname', 
