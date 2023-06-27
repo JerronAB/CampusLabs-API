@@ -44,7 +44,7 @@ class CLData:
         self.DataHorizontal = tuple()
         self.ColumnsHorizontal = []
         self.DataVertical = {}
-        self.dataAliases = {}
+        self.dataAliases = []
         if importDefaultDataTypes:
             self.addDataType('term', ['term', 'period', 'time-period','time period'], lambda x: x.isnumeric() and len(x) == 4)
             self.addDataType('subject', ['subject', 'subj'], lambda x: len(x) < 4)
@@ -61,7 +61,7 @@ class CLData:
     def constructReport(self, reportDictionary: dict):
         #whole thing almost works, but it's very messy and unintuitive
         self.syncData('vertical')
-        if not all([column.lower() in (name.lower() for name in self.dataAliases.keys()) for key,column in reportDictionary.items()]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary, or is not a created column.')
+        if not all([column.lower() in (obj.name.lower() for obj in self.dataAliases) for key,column in reportDictionary.items()]): raise Exception('One or more columns in the given list is not present in the basicDataType dictionary, or is not a created column.')
         self.prune()
         #next we move the data to match this constructed list
         grabVal = lambda value: [key for key,val in reportDictionary.items() if val == value]
@@ -76,7 +76,7 @@ class CLData:
 
     def concat(self,new_column_name: str,*columns: str): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
         self.syncData('vertical') #needs data synced vertically
-        self.dataAliases[new_column_name] = basicDataType(name=new_column_name)
+        self.dataAliases.append(basicDataType(name=new_column_name))
         self.DataVertical[new_column_name] = []
         indices = [self.ColumnsHorizontal.index(column) for column in columns]
         for row in self.DataHorizontal:
@@ -90,7 +90,7 @@ class CLData:
         #this should essentially rename columns if they match an alias above
         self.syncData('auto')
         for index,columnName in enumerate(self.ColumnsHorizontal):
-            for key,datatype in self.dataAliases.items():
+            for datatype in self.dataAliases:
                 if datatype.aliasMatch(columnName): self.ColumnsHorizontal[index] = datatype
         self.syncData('vertical')
         for key,data in self.DataVertical.items(): 
@@ -98,7 +98,7 @@ class CLData:
         keys = list(self.DataVertical.keys())
         key = keys[0]
         vertLength = len(self.DataVertical[key])              
-        for _basicDataType in self.dataAliases.values():
+        for _basicDataType in self.dataAliases:
             if _basicDataType == 'INSERTION':
                 print(f'During association, an insertable datatype, {_basicDataType.name} was detected.')
                 self.DataVertical[_basicDataType] = ['' for i in range(vertLength)]
@@ -140,11 +140,11 @@ class CLData:
         self.lastSync = 'horizontal'
 
     def addDataType(self, name: str, aliases: list, validator=None, datamodifier=None):
-        self.dataAliases[name] = basicDataType(name,aliases,validator,datamodifier)
+        self.dataAliases.append(basicDataType(name,aliases,validator,datamodifier))
     def insertDataType(self, name: str, validator=None, datamodifier=None): #inserts data if none exists
         self.addDataType(name, ['INSERTION'], validator, datamodifier)
     def copyDataType(self, newName: str, oldName: str, datamodifier=None):
-        self.dataAliases[newName] = basicDataType(newName,['COPIED',oldName],dataMod=datamodifier)
+        self.dataAliases.append(basicDataType(newName,['COPIED',oldName],dataMod=datamodifier))
 
     def deDup(self, dedupColumn: str): #make this nicer and cleaner
         self.syncData('horizontal')
