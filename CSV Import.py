@@ -107,12 +107,14 @@ Instructors_Export.CSVimport('temp.class_table_4224.csv')
 Instructors_Export.associate()
 Instructors_Export.concat('SectionIdentifier', 'term', 'subject', 'catalog', 'section')
 Instructors_Export.constructReport(construction_dictionary)
+Instructors_Export.deDup('SectionIdentifier')
 Instructors_Export.CSVexport('../4224_instrs_report_temp.csv')
 
 Instructors_Export.CSVimport('temp.class_table_4226.csv')
 Instructors_Export.associate()
 Instructors_Export.concat('SectionIdentifier', 'term', 'subject', 'catalog', 'section')
 Instructors_Export.constructReport(construction_dictionary)
+Instructors_Export.deDup('SectionIdentifier')
 Instructors_Export.CSVexport('../4226_instrs_report_temp.csv')
 
 #this is just here for a reference

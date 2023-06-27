@@ -48,7 +48,7 @@ class CLData:
         if importDefaultDataTypes:
             self.addDataType('term', ['term', 'period', 'time-period','time period'], lambda x: x.isnumeric() and len(x) == 4)
             self.addDataType('subject', ['subject', 'subj'], lambda x: len(x) < 4)
-            self.addDataType('class-title', ['class-desc', 'class desc', 'class description', 'title', 'description'])
+            self.addDataType('class-title', ['class-desc', 'class desc', 'class description', 'title', 'description', 'descr'])
             self.addDataType('catalog', ['catalog', 'catalogue', 'course num', 'course nbr', 'number'])
             self.addDataType('section', ['section', 'section name', 'sectionid'])
             self.addDataType('instructor', ['instructor', 'instructor name'], lambda x: x.lower() != 'staff')
