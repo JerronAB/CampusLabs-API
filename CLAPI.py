@@ -1,7 +1,6 @@
 #Current Goals:
 #   Currently, accessing/retrieving/testing basicDataType using a CLData class is circuitous
-#   Need to shape it up using dunder methods on the basicDataType class. 
-#   Finally, do general QA/logic-checking on all CLData methods. I got this out way too quickly. 
+#   To wrap up, do general QA/logic-checking on all CLData methods. I got this out way too quickly. 
 
 class basicDataType: #once things get more complex, this class will be used by CLData to represent columns
     #eventually I want this to be a subclass of a dictionary
@@ -21,13 +20,13 @@ class basicDataType: #once things get more complex, this class will be used by C
         return hash(self.name)
     def __contains__(self,string):
         if string.lower() in [item.lower() for item in self.aliasList]: return True
-        if string.lower() == self.name: return True
+        elif string.lower() == self.name: return True
         else: return False
     def validateData(self,data) -> bool:
         if self.validator is None: 
             print(f'No validator for {self.name}, returning True---')
             return True #data is always valid if we haven't defined validator
-        return self.validator(data) # do we also want to raise Exception()
+        return self.validator(data)
     def aliasMatch(self,alias):
         return alias.lower() in self.aliasList
     def modData(self,list_of_data):
@@ -73,7 +72,6 @@ class CLData:
                 if type(column) is basicDataType: newDict[grabVal(column.name)[0]] = data
                 else: newDict[grabVal(column)[0]] = data
         self.DataVertical = newDict
-        #AT SOME POINT, INSTR-EMAIL JUST BECOMES Email
         self.syncData('horizontal')
 
     def concat(self,new_column_name: str,*columns: str): #takes basic data types and allows you to concatenate them into a new column; CLData.concat("sectionID","term","course","section")
@@ -147,10 +145,6 @@ class CLData:
         self.addDataType(name, ['INSERTION'], validator, datamodifier)
     def copyDataType(self, newName: str, oldName: str, datamodifier=None):
         self.dataAliases[newName] = basicDataType(newName,['COPIED',oldName],dataMod=datamodifier)
-
-    def mapRows(self, mappedFunction: callable): 
-        self.Data = [mappedFunction(row) for row in self.DataHorizontal if row is not None]
-        return [mappedFunction(row) for row in self.Data if row is not None]
 
     def deDup(self, dedupColumn: str): #make this nicer and cleaner
         self.syncData('horizontal')
