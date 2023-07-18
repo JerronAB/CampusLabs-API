@@ -92,7 +92,7 @@ def splitNameLast(name):
     return last[0]
 
 Instructors_Export = CLAPI.CLData()
-Instructors_Export.copyDataType('PersonIdentifier','instructor-email',datamodifier=lambda email: instrDict.get(email,'UNKNOWN'))
+Instructors_Export.copyDataType('PersonIdentifier','instructor-email',datamodifier=lambda email: instrDict.get(email,''))
 Instructors_Export.copyDataType('firstname','instructor',datamodifier=splitNameFirst)
 Instructors_Export.copyDataType('lastname','instructor',datamodifier=splitNameLast)
 Instructors_Export.insertDataType('role',datamodifier=lambda x: 'Primary')

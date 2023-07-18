@@ -19,9 +19,9 @@ class basicDataType: #once things get more complex, this class will be used by C
     def __hash__(self) -> int:
         return hash(self.name)
     def __contains__(self,string):
-        if string.lower() in [item.lower() for item in self.aliasList]: return True
+        if string.lower() in (item.lower() for item in self.aliasList): return True
         elif string.lower() == self.name: return True
-        else: return False
+        return False
     def validateData(self,data) -> bool:
         if self.validator is None: 
             print(f'No validator for {self.name}, returning True---')
@@ -52,7 +52,7 @@ class CLData:
             self.addDataType('catalog', ['catalog', 'catalogue', 'course num', 'course nbr', 'number'])
             self.addDataType('section', ['section', 'section name', 'sectionid'])
             self.addDataType('instructor', ['instructor', 'instructor name'], lambda x: x.lower() != 'staff')
-            self.addDataType('instructor-email', ['email', 'email address', 'instructor email', 'email id'])
+            self.addDataType('instructor-email', ['email', 'email address', 'instructor email', 'email id'],validator=lambda email: '@' in email and '.' in email[email.index('@') + 1:] and email.count('@') == 1)
             self.addDataType('start-date', ['first day', 'start date', 'commencement date', 'startdate', 'begin date'])
             self.addDataType('end-date', ['last day', 'end date','enddate', 'finish date', 'completion date', 'end date'])
             self.addDataType('credits', ['credit hours', 'course units', 'units'])
