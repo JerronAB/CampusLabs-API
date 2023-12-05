@@ -28,7 +28,9 @@ class basicDataType: #once things get more complex, this class will be used by C
             return True #data is always valid if we haven't defined validator
         return self.validator(data)
     def aliasMatch(self,alias):
-        return alias.lower() in self.aliasList
+        #print(f'All aliases for {self.name}: {self.aliasList}')
+        if self.aliasList == []: return False
+        return alias.lower() in self.aliasList if self.aliasList[0] != 'COPIED' else False
     def modData(self,list_of_data):
         stripper = lambda input: input.strip() #just throwing this in anyway
         data = [stripper(cell) for cell in list_of_data]
@@ -36,7 +38,8 @@ class basicDataType: #once things get more complex, this class will be used by C
         try:
             return [self.dataModder(cell) for cell in data]
         except:
-            print(f'Error during data modification for {self.name}')
+            print(f'Error during data modification for {self.name}.')
+            print([self.dataModder(cell) for cell in data])
             return data
 
 class CLData: 
@@ -47,7 +50,7 @@ class CLData:
         self.dataAliases = []
         if importDefaultDataTypes:
             self.addDataType('term', ['term', 'period', 'time-period','time period'], lambda x: x.isnumeric() and len(x) == 4)
-            self.addDataType('subject', ['subject', 'subj'], lambda x: len(x) < 4)
+            self.addDataType('subject', ['subject', 'subj'], lambda x: len(x) < 5)
             self.addDataType('class-title', ['class-desc', 'class desc', 'class description', 'title', 'description', 'descr'])
             self.addDataType('catalog', ['catalog', 'catalogue', 'course num', 'course nbr', 'number'])
             self.addDataType('section', ['section', 'section name', 'sectionid'])
@@ -83,15 +86,18 @@ class CLData:
             output = ''.join([row[index].strip() for index in indices]) 
             #gets indices of each column, concatenates lists to DataHorizontal
             self.DataVertical[new_column_name].append(output)
-        print('Complete... syncing data back to horizontal attributes. ')
+        print('Concatenation complete... syncing data back to horizontal attributes. ')
         self.syncData('horizontal') #resync the data horizontally
 
     def associate(self): #this whole stanza is awful
-        #this should essentially rename columns if they match an alias above
         self.syncData('auto')
-        for index,columnName in enumerate(self.ColumnsHorizontal):
-            for datatype in self.dataAliases:
-                if datatype.aliasMatch(columnName): self.ColumnsHorizontal[index] = datatype
+        print(self.dataAliases)
+        for index,columnName in enumerate(self.ColumnsHorizontal): 
+            for datatype in self.dataAliases: #If the name of the column is in the datatype's alias list,
+                if datatype.aliasMatch(columnName): #it will place the datatype as head of the column
+                    print(f'Alias matched: basicDatatype: {datatype} ColumnName: {self.ColumnsHorizontal[index]}')
+                    self.ColumnsHorizontal[index] = datatype
+        print(self.DataHorizontal[0])
         self.syncData('vertical')
         for key,data in self.DataVertical.items(): 
             if type(key) is basicDataType: self.DataVertical[key] = key.modData(data)
@@ -100,11 +106,13 @@ class CLData:
         vertLength = len(self.DataVertical[key])              
         for _basicDataType in self.dataAliases:
             if _basicDataType == 'INSERTION':
-                print(f'During association, an insertable datatype, {_basicDataType.name} was detected.')
+                print(f'During association, an insertable datatype, {_basicDataType.name}, was detected.')
                 self.DataVertical[_basicDataType] = ['' for i in range(vertLength)]
                 self.DataVertical[_basicDataType] = _basicDataType.modData(self.DataVertical[_basicDataType])
             if _basicDataType == 'COPIED':
-                print(f'A datatype to copy, {_basicDataType} was found during association. Modding {_basicDataType.aliasList[1]} data with function: {_basicDataType.dataModder}')
+                print(f'A datatype to copy, {_basicDataType}, was found during association. Modding {_basicDataType.aliasList[1]} data with function: {_basicDataType.dataModder}')
+                print(f'DATA ALIASES: {self.dataAliases}')
+                print(self.DataVertical.keys())
                 self.DataVertical[_basicDataType] = _basicDataType.modData(self.DataVertical[_basicDataType.aliasList[1]])
         self.syncData('horizontal')
 
