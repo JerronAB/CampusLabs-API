@@ -1,9 +1,7 @@
 #Current Goals:
 #   Currently, accessing/retrieving/testing basicDataType using a CLData class is circuitous
-#   To wrap up, do general QA/logic-checking on all CLData methods. I got this out way too quickly. 
 
-class basicDataType: #once things get more complex, this class will be used by CLData to represent columns
-    #eventually I want this to be a subclass of a dictionary
+class basicDataType: 
     def __init__(self,name,aliasList=[],validator: callable =None,dataMod: callable =None):
         self.name = name
         self.aliasList = aliasList
