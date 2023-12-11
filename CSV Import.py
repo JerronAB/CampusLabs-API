@@ -38,7 +38,7 @@ construction_dictionary = {'SectionIdentifier': 'SectionIdentifier',
                            'CrossListingIdentifier': 'crosslisting'
                            }
 
-Section_Export.CSVimport('temp.class_table_4234.csv')
+Section_Export.CSVimport('class_table_4234.csv')
 Section_Export.associate()
 Section_Export.concat('SectionIdentifier', 'term', 'subject', 'catalog', 'section')
 Section_Export.concat('CourseIdentifier', 'subject', 'catalog')
@@ -61,7 +61,7 @@ construction_dictionary = {'CourseIdentifier': 'CourseIdentifier',
                            'Description': 'desc',
                            'CipCode': 'cipcode'
                            }
-Course_Export.CSVimport('temp.class_table_4234.csv')
+Course_Export.CSVimport('class_table_4234.csv')
 Course_Export.associate()
 Course_Export.concat('CourseIdentifier', 'subject', 'catalog')
 Course_Export.constructReport(construction_dictionary)
@@ -96,7 +96,7 @@ construction_dictionary = {'PersonIdentifier': 'PersonIdentifier',
                            'Email': 'instructor-email', 
                            'Role': 'role', 
                            }
-Instructors_Export.CSVimport('temp.class_table_4234.csv')
+Instructors_Export.CSVimport('class_table_4234.csv')
 Instructors_Export.associate()
 Instructors_Export.concat('SectionIdentifier', 'term', 'subject', 'catalog', 'section')
 Instructors_Export.constructReport(construction_dictionary)
