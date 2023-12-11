@@ -1,12 +1,5 @@
 import CLAPI
 
-#NOTES for continuing:
-# My datamodifier for org-unit is not working. Is it working for delivery mode? test that. 
-# It appears that copyDataType is causing org-unit to override subject. 
-#       I should see if this can be replicated. I think it may be the hash causing the issue. Maybe something with the association overriding based on the aliaslist as well?
-
-#       Hash wasn't the issue. Association may be using an alias and overriding subject. But why would that only happen to one item?
-
 org_unit_import = CLAPI.CLData() #this section just turns org_units into a dictionary based on the courses temp csv {subject:number}
 org_unit_import.CSVimport('courses temp.csv')
 org_unit_import.syncData('auto')
