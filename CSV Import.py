@@ -38,13 +38,13 @@ construction_dictionary = {'SectionIdentifier': 'SectionIdentifier',
                            'CrossListingIdentifier': 'crosslisting'
                            }
 
-Section_Export.CSVimport('class_table_4234.csv')
+Section_Export.CSVimport('class_table_4236.csv')
 Section_Export.associate()
 Section_Export.concat('SectionIdentifier', 'term', 'subject', 'catalog', 'section')
 Section_Export.concat('CourseIdentifier', 'subject', 'catalog')
 Section_Export.constructReport(construction_dictionary)
 Section_Export.deDup('SectionIdentifier')
-Section_Export.CSVexport('../4234_sections_report_temp.csv')
+Section_Export.CSVexport('../../4236_sections_report_temp.csv')
 
 Course_Export = CLAPI.CLData()
 Course_Export.insertDataType('type', datamodifier=lambda x: 'Undergraduate')
@@ -61,12 +61,12 @@ construction_dictionary = {'CourseIdentifier': 'CourseIdentifier',
                            'Description': 'desc',
                            'CipCode': 'cipcode'
                            }
-Course_Export.CSVimport('class_table_4234.csv')
+Course_Export.CSVimport('class_table_4236.csv')
 Course_Export.associate()
 Course_Export.concat('CourseIdentifier', 'subject', 'catalog')
 Course_Export.constructReport(construction_dictionary)
 Course_Export.deDup('CourseIdentifier')
-Course_Export.CSVexport('../4234_course_report_temp.csv')
+Course_Export.CSVexport('../../4236_course_report_temp.csv')
 
 with open('temp.accounts.csv', 'r', encoding='ISO-8859-1') as csvfile: #UTF-8
     from csv import reader
@@ -96,12 +96,12 @@ construction_dictionary = {'PersonIdentifier': 'PersonIdentifier',
                            'Email': 'instructor-email', 
                            'Role': 'role', 
                            }
-Instructors_Export.CSVimport('class_table_4234.csv')
+Instructors_Export.CSVimport('class_table_4236.csv')
 Instructors_Export.associate()
 Instructors_Export.concat('SectionIdentifier', 'term', 'subject', 'catalog', 'section')
 Instructors_Export.constructReport(construction_dictionary)
 Instructors_Export.deDup('SectionIdentifier')
-Instructors_Export.CSVexport('../4234_instrs_report_temp.csv')
+Instructors_Export.CSVexport('../../4236_instrs_report_temp.csv')
 
 #this is just here for a reference
 organizational_units = ['OrgUnitIdentifier','Name', 'Acronym', 'ParentIdentifier', 'Type']
