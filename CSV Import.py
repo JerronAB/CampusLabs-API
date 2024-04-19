@@ -68,7 +68,7 @@ Course_Export.constructReport(construction_dictionary)
 Course_Export.deDup('CourseIdentifier')
 Course_Export.CSVexport('../../4236_course_report_temp.csv')
 
-with open('temp.accounts.csv', 'r', encoding='ISO-8859-1') as csvfile: #UTF-8
+with open('accounts.csv', 'r', encoding='ISO-8859-1') as csvfile: #UTF-8
     from csv import reader
     csvData = [row for row in reader(csvfile)]
     columnsHorizontal = [(lambda inputStr: inputStr.replace("ï»¿",""))(colName) for colName in csvData.pop(0)]
