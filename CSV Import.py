@@ -1,7 +1,7 @@
 import CLAPI
 
 org_unit_import = CLAPI.CLData() #this section just turns org_units into a dictionary based on the courses temp csv {subject:number}
-org_unit_import.CSVimport('courses temp.csv')
+org_unit_import.CSVimport('courses.csv')
 org_unit_import.syncData('auto')
 org_units = {row[1]:row[5] for row in org_unit_import.DataHorizontal}
 print(org_units)
