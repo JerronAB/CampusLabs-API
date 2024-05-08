@@ -44,7 +44,7 @@ Section_Export.concat('SectionIdentifier', 'term', 'subject', 'catalog', 'sectio
 Section_Export.concat('CourseIdentifier', 'subject', 'catalog')
 Section_Export.constructReport(construction_dictionary)
 Section_Export.deDup('SectionIdentifier')
-Section_Export.CSVexport('../../4236_sections_report_temp.csv')
+Section_Export.CSVexport('../4236_sections_report_temp.csv')
 
 Course_Export = CLAPI.CLData()
 Course_Export.insertDataType('type', datamodifier=lambda x: 'Undergraduate')
@@ -66,7 +66,7 @@ Course_Export.associate()
 Course_Export.concat('CourseIdentifier', 'subject', 'catalog')
 Course_Export.constructReport(construction_dictionary)
 Course_Export.deDup('CourseIdentifier')
-Course_Export.CSVexport('../../4236_course_report_temp.csv')
+Course_Export.CSVexport('../4236_course_report_temp.csv')
 
 with open('accounts.csv', 'r', encoding='ISO-8859-1') as csvfile: #UTF-8
     from csv import reader
@@ -101,7 +101,7 @@ Instructors_Export.associate()
 Instructors_Export.concat('SectionIdentifier', 'term', 'subject', 'catalog', 'section')
 Instructors_Export.constructReport(construction_dictionary)
 Instructors_Export.deDup('SectionIdentifier')
-Instructors_Export.CSVexport('../../4236_instrs_report_temp.csv')
+Instructors_Export.CSVexport('../4236_instrs_report_temp.csv')
 
 #this is just here for a reference
 organizational_units = ['OrgUnitIdentifier','Name', 'Acronym', 'ParentIdentifier', 'Type']
