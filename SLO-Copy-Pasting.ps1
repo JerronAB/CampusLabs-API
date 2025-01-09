@@ -1,5 +1,7 @@
 $csv = Import-Csv 'C:\Users\jboling0013\OneDrive - KCTCS\temp.csv'
 
+#want to: 1) sort by most courses 2) show a progress bar
+
 function Wait-ForKey {
     Write-Host "WAITING FOR KEY"
     $read_key = $Host.UI.RawUI.ReadKey()
@@ -8,7 +10,7 @@ function Wait-ForKey {
 }
 
 $members = ($csv | Get-Member)
-$members | Where-Object {$_.MemberType -EQ 'NoteProperty' -and $_.Name -ne 'ContainerName'} | ForEach-Object {
+$members | Where-Object {$_.MemberType -EQ 'NoteProperty' -and $_.Name -ne 'ContainerName'} | Group-Object -Property Name | Sort-Object -Property Count -Descending | ForEach-Object {
     #$csv.($_.Name)
     $column_name = $_.Name
     # Load System.Windows.Forms for SendKeys
